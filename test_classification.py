@@ -2,7 +2,8 @@
 Author: Benny
 Date: Nov 2019
 """
-from data_utils.ModelNetDataLoader import ModelNetDataLoader
+#from data_utils.ModelNetDataLoader import ModelNetDataLoader
+from data_utils.ShapeNet55ClsDataLoader import ShapeNet55ClsDataLoader as ClsDataLoader
 import argparse
 import numpy as np
 import os
@@ -23,9 +24,10 @@ def parse_args():
     parser.add_argument('--use_cpu', action='store_true', default=False, help='use cpu mode')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=24, help='batch size in training')
-    parser.add_argument('--num_category', default=40, type=int, choices=[10, 40],  help='training on ModelNet10/40')
+    parser.add_argument('--num_category', default=40, type=int, choices=[10, 40, 55],  help='training on ModelNet10/40')
     parser.add_argument('--num_point', type=int, default=1024, help='Point Number')
-    parser.add_argument('--log_dir', type=str, required=True, help='Experiment root')
+    parser.add_argument('--exp_dir', type=str, required=True, help='Experiment root')
+    parser.add_argument('--log_dir', type=str, required=True, help='Experiment name')
     parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
     parser.add_argument('--use_uniform_sample', action='store_true', default=False, help='use uniform sampiling')
     parser.add_argument('--num_votes', type=int, default=3, help='Aggregate classification scores with voting')
@@ -72,7 +74,7 @@ def main(args):
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
     '''CREATE DIR'''
-    experiment_dir = 'log/classification/' + args.log_dir
+    experiment_dir = args.exp_dir + '/classification/' + args.log_dir
 
     '''LOG'''
     args = parse_args()
@@ -88,9 +90,10 @@ def main(args):
 
     '''DATA LOADING'''
     log_string('Load dataset ...')
-    data_path = 'data/modelnet40_normal_resampled/'
+    #data_path = 'data/modelnet40_normal_resampled/'
 
-    test_dataset = ModelNetDataLoader(root=data_path, args=args, split='test', process_data=False)
+    #test_dataset = ModelNetDataLoader(root=data_path, args=args, split='test', process_data=False)
+    test_dataset = ClsDataLoader(args=args, split='test', process_data=False)
     testDataLoader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10)
 
     '''MODEL LOADING'''

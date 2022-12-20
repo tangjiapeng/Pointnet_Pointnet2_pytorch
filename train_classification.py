@@ -17,7 +17,8 @@ import argparse
 
 from pathlib import Path
 from tqdm import tqdm
-from data_utils.ModelNetDataLoader import ModelNetDataLoader
+#from data_utils.ModelNetDataLoader import ModelNetDataLoader
+from data_utils.ShapeNet55ClsDataLoader import ShapeNet55ClsDataLoader as ClsDataLoader
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
@@ -30,12 +31,15 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--batch_size', type=int, default=24, help='batch size in training')
     parser.add_argument('--model', default='pointnet_cls', help='model name [default: pointnet_cls]')
-    parser.add_argument('--num_category', default=40, type=int, choices=[10, 40],  help='training on ModelNet10/40')
+    parser.add_argument('--num_category', default=40, type=int, choices=[10, 40, 55],  help='training on ModelNet10/40')
     parser.add_argument('--epoch', default=200, type=int, help='number of epoch in training')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate in training')
     parser.add_argument('--num_point', type=int, default=1024, help='Point Number')
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer for training')
-    parser.add_argument('--log_dir', type=str, default=None, help='experiment root')
+    parser.add_argument('--root', type=str, default='/cluster_HDD/umoja/jtang/ShapeNetV2_watertight/', help='data root')
+    parser.add_argument('--root_split', type=str, default='/cluster_HDD/umoja/jtang/ShapeNetV2_point/', help='data root split')
+    parser.add_argument('--exp_dir', type=str, default=None, help='experiment root')
+    parser.add_argument('--log_dir', type=str, default=None, help='experiment name')
     parser.add_argument('--decay_rate', type=float, default=1e-4, help='decay rate')
     parser.add_argument('--use_normals', action='store_true', default=False, help='use normals')
     parser.add_argument('--process_data', action='store_true', default=False, help='save data offline')
@@ -88,7 +92,7 @@ def main(args):
 
     '''CREATE DIR'''
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
-    exp_dir = Path('./log/')
+    exp_dir = Path(args.exp_dir)
     exp_dir.mkdir(exist_ok=True)
     exp_dir = exp_dir.joinpath('classification')
     exp_dir.mkdir(exist_ok=True)
@@ -116,10 +120,10 @@ def main(args):
 
     '''DATA LOADING'''
     log_string('Load dataset ...')
-    data_path = 'data/modelnet40_normal_resampled/'
+    #data_path = 'data/modelnet40_normal_resampled/'
 
-    train_dataset = ModelNetDataLoader(root=data_path, args=args, split='train', process_data=args.process_data)
-    test_dataset = ModelNetDataLoader(root=data_path, args=args, split='test', process_data=args.process_data)
+    train_dataset = ClsDataLoader(args=args, split='train', process_data=args.process_data)
+    test_dataset = ClsDataLoader(args=args, split='test', process_data=args.process_data)
     trainDataLoader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=10, drop_last=True)
     testDataLoader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10)
 
